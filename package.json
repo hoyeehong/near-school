@@ -45,7 +45,7 @@
     "eslint-config-next": "16.3.5",
     "prettier": "^3.9.8",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.0",
+    "typescript": "^7.0.2",
     "vitest": "^4.0.0"
   },
   "overrides": {
