@@ -9,7 +9,8 @@ const cases = [
   {
     question: "Which track applies to my address?",
     year: 2027,
-    contains: "unverified",
+    pattern: /unverified|unavailable|cannot.{0,30}verif|not.{0,20}verified/i,
+    noActions: true,
   },
   { question: "Explain the new Phase 2C rules", year: 2027, citations: true },
   { question: "Find parks near Nanyang", year: 2027, category: "park" },
@@ -35,7 +36,8 @@ for (const c of cases) {
     question: c.question,
     passed:
       (c.ids === undefined || ids.length === c.ids) &&
-      (!c.contains || result.answer.toLowerCase().includes(c.contains)) &&
+      (!c.pattern || c.pattern.test(result.answer)) &&
+      (!c.noActions || result.actions.length === 0) &&
       (!c.citations || result.citations.length > 0) &&
       (!c.category ||
         (ids.length > 0 &&

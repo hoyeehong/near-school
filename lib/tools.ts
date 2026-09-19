@@ -8,21 +8,35 @@ import {
   type Place,
 } from "./types";
 const findSchema = z.object({
-  query: z.string().max(150).optional(),
-  nearId: z.string().optional(),
+  query: z
+    .string()
+    .max(150)
+    .optional()
+    .describe(
+      "Optional substring of a place name, street or postal code. Omit for all schools or a two-track filter; never put policy terms such as two-track in this field.",
+    ),
+  nearId: z
+    .string()
+    .optional()
+    .describe(
+      "Existing feature ID of the origin, such as a school ID from schoolIndex.",
+    ),
   radiusMetres: z.number().min(100).max(5000).optional(),
-  twoTrackOnly: z.boolean().optional(),
+  twoTrackOnly: z
+    .boolean()
+    .optional()
+    .describe(
+      "Set true to return schools participating in the two-track scheme for the map's selected registration year.",
+    ),
 });
 export const toolSchemas = {
   findSchools: findSchema,
   findHdbBlocks: findSchema.omit({ twoTrackOnly: true }),
-  findAmenities: findSchema
-    .omit({ twoTrackOnly: true })
-    .extend({
-      categories: z
-        .array(z.enum(["childcare", "park", "hawker", "transit"]))
-        .min(1),
-    }),
+  findAmenities: findSchema.omit({ twoTrackOnly: true }).extend({
+    categories: z
+      .array(z.enum(["childcare", "park", "hawker", "transit"]))
+      .min(1),
+  }),
   getOfficialDistanceCategory: z.object({
     schoolId: z.string(),
     addressId: z.string(),
