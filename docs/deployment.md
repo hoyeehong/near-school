@@ -9,7 +9,7 @@ Required: a GCP project with billing; permission to create networks, IAM roles, 
 ## Bootstrap
 
 1. Create the project with `gcloud projects create PROJECT_ID --name='Near School'`. Enable Cloud Billing API and link your selected billing account. Do not reuse another application's project by accident.
-2. Enable Artifact Registry and create the `near-school` Docker repository in `asia-southeast1`.
+2. Enable the bootstrap APIs (`cloudresourcemanager.googleapis.com`, `iam.googleapis.com`, `serviceusage.googleapis.com`, `artifactregistry.googleapis.com`) and create the `near-school` Docker repository in `asia-southeast1`. Pass both `--project=PROJECT_ID` and `--billing-project=PROJECT_ID` to gcloud so an old CLI quota project cannot receive these calls.
 3. Build the two images with `docker build --platform linux/amd64 --target runner` and `--target jobs`, push to Artifact Registry, and record their immutable digests.
 4. Create `gs://PROJECT_ID-tfstate` with uniform bucket-level access, public-access prevention and versioning. Restrict state access to administrators; Terraform stores generated DB passwords in state.
 5. Authenticate Terraform using Application Default Credentials or an ephemeral access token from your signed-in gcloud account. Copy `infra/terraform.tfvars.example` to an ignored `.tfvars` file and supply project, GitHub repository, numeric owner ID, notification email and image digests.
@@ -21,10 +21,12 @@ terraform -chdir=infra plan -out=release.tfplan
 terraform -chdir=infra apply release.tfplan
 ```
 
-7. If the registry was bootstrapped with gcloud, import it before planning: `terraform -chdir=infra import google_artifact_registry_repository.app projects/PROJECT_ID/locations/asia-southeast1/repositories/near-school`.
+7. If the registry was bootstrapped with gcloud, import it **before step 6's plan**: `terraform -chdir=infra import google_artifact_registry_repository.app projects/PROJECT_ID/locations/asia-southeast1/repositories/near-school`.
 8. Execute `near-school-migrate` and then `near-school-seed` using `gcloud run jobs execute JOB --region=asia-southeast1 --wait`. The application defaults to labelled demo mode during this bootstrap.
 
 Model IDs are configurable. Check availability and prices in the Vertex project before enabling `AI_MODE=live`. The default Vertex endpoint is global: do not claim Singapore-only model processing. Cloud SQL and the web service are in Singapore.
+
+The configured generation model is `gemini-3.5-flash-lite` and the embedding model is `gemini-embedding-001` (768 dimensions). Both passed a project API availability check on 19 September 2026. Model availability alone does not establish answer quality: execute the `near-school-evaluate` job after seeding and inspect its results before enabling the live assistant. See Google's [model lifecycle](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-versions) and [pricing](https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing) before changing these settings. The S$0.25 request reservation is deliberately conservative for the bounded text-only tools; it is not an exact billing reconciliation.
 
 ## GitHub setup
 

@@ -1,7 +1,8 @@
 import { database } from "@/lib/db";
 export async function GET() {
   try {
-    if (process.env.DATA_MODE === "live") await database().query("SELECT 1");
+    if (process.env.DATA_MODE === "live" || process.env.AI_MODE === "live")
+      await database().query("SELECT 1");
     return Response.json({
       status: "ok",
       dataMode: process.env.DATA_MODE ?? "demo",

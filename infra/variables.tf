@@ -35,7 +35,7 @@ variable "ai_mode" {
 }
 variable "vertex_model" {
   type    = string
-  default = "gemini-2.5-flash"
+  default = "gemini-3.5-flash-lite"
 }
 variable "embedding_model" {
   type    = string

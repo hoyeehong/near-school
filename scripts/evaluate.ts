@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { demoChat } from "../lib/demo-chat";
 import { demoPlaces } from "../data/demo";
 import { liveChat } from "../lib/ai";
+import { database } from "../lib/db";
 const cases = [
   { question: "Show the two-track schools", year: 2027, ids: 12 },
   { question: "Show the two-track schools", year: 2026, ids: 0 },
@@ -43,6 +44,9 @@ for (const c of cases) {
               demoPlaces.find((p) => p.id === id)?.category === c.category,
           ))),
     latencyMs: Date.now() - started,
+    answer: result.answer,
+    citations: result.citations,
+    actions: result.actions,
   });
 }
 await mkdir("artifacts", { recursive: true });
@@ -58,4 +62,5 @@ await writeFile(
   ),
 );
 console.log(results);
+await database().end();
 if (results.some((r) => !r.passed)) process.exitCode = 1;

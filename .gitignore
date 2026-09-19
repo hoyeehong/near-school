@@ -10,6 +10,7 @@ infra/.terraform/
 *.tfstate*
 *.tfplan
 *.tfvars
+*.tfvars.json
 !*.tfvars.example
 data/candidates/
 artifacts/

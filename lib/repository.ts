@@ -66,7 +66,10 @@ export async function searchPolicies(
   query: string,
   year: number,
 ): Promise<Policy[]> {
-  if (isLiveData()) {
+  if (
+    isLiveData() ||
+    (process.env.AI_MODE === "live" && process.env.DATABASE_URL)
+  ) {
     if (
       process.env.VERTEX_EMBEDDING_MODEL &&
       process.env.GOOGLE_CLOUD_PROJECT

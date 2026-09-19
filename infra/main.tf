@@ -269,7 +269,7 @@ resource "google_cloud_run_v2_service_iam_member" "public" {
   member   = "allUsers"
 }
 resource "google_cloud_run_v2_job" "jobs" {
-  for_each            = toset(["migrate", "seed", "refresh"])
+  for_each            = toset(["migrate", "seed", "refresh", "evaluate"])
   name                = "near-school-${each.value}"
   location            = var.region
   deletion_protection = false
@@ -310,7 +310,7 @@ resource "google_cloud_run_v2_job" "jobs" {
         }
         dynamic "env" {
           for_each = {
-            GOOGLE_CLOUD_PROJECT = var.project_id, INSTANCE_CONNECTION_NAME = google_sql_database_instance.postgres.connection_name, GOOGLE_CLOUD_LOCATION = "global", VERTEX_EMBEDDING_MODEL = var.embedding_model, SNAPSHOT_BUCKET = google_storage_bucket.snapshots.name
+            GOOGLE_CLOUD_PROJECT = var.project_id, INSTANCE_CONNECTION_NAME = google_sql_database_instance.postgres.connection_name, GOOGLE_CLOUD_LOCATION = "global", VERTEX_MODEL = var.vertex_model, VERTEX_EMBEDDING_MODEL = var.embedding_model, SNAPSHOT_BUCKET = google_storage_bucket.snapshots.name, DATA_MODE = "demo", AI_MODE = each.value == "evaluate" ? "live" : "demo", EVAL_LIVE = each.value == "evaluate" ? "true" : "false"
           }
           content {
             name  = env.key

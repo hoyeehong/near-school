@@ -57,3 +57,4 @@ jobs:
         run: |
           gcloud run jobs update near-school-seed --image="$JOB_IMAGE" --region="$REGION" --project="$PROJECT"
           gcloud run jobs update near-school-refresh --image="$JOB_IMAGE" --region="$REGION" --project="$PROJECT"
+          gcloud run jobs update near-school-evaluate --image="$JOB_IMAGE" --region="$REGION" --project="$PROJECT"
