@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.env*
+!.env.example
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+infra/.terraform/
+*.tfstate*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+data/candidates/
+artifacts/
+gha-creds-*.json

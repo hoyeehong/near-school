@@ -1,0 +1,59 @@
+name: Deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: production-release
+  cancel-in-progress: false
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+  release:
+    if: vars.GCP_PROJECT_ID != ''
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT: ${{ vars.GCP_PROJECT_ID }}
+      REGION: asia-southeast1
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+      - name: Build immutable release images
+        run: |
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          REGISTRY="$REGION-docker.pkg.dev/$PROJECT/near-school"
+          docker build --target runner -t "$REGISTRY/app:$GITHUB_SHA" .
+          docker build --target jobs -t "$REGISTRY/jobs:$GITHUB_SHA" .
+          docker push "$REGISTRY/app:$GITHUB_SHA"
+          docker push "$REGISTRY/jobs:$GITHUB_SHA"
+          APP_DIGEST=$(gcloud artifacts docker images describe "$REGISTRY/app:$GITHUB_SHA" --format='value(image_summary.digest)')
+          JOB_DIGEST=$(gcloud artifacts docker images describe "$REGISTRY/jobs:$GITHUB_SHA" --format='value(image_summary.digest)')
+          echo "APP_IMAGE=$REGISTRY/app@$APP_DIGEST" >> "$GITHUB_ENV"
+          echo "JOB_IMAGE=$REGISTRY/jobs@$JOB_DIGEST" >> "$GITHUB_ENV"
+      - name: Migrate before deployment
+        run: |
+          gcloud run jobs update near-school-migrate --image="$JOB_IMAGE" --region="$REGION" --project="$PROJECT"
+          gcloud run jobs execute near-school-migrate --wait --region="$REGION" --project="$PROJECT"
+      - name: Deploy, smoke test and switch traffic
+        run: bash scripts/release.sh
+      - name: Update data job images
+        run: |
+          gcloud run jobs update near-school-seed --image="$JOB_IMAGE" --region="$REGION" --project="$PROJECT"
+          gcloud run jobs update near-school-refresh --image="$JOB_IMAGE" --region="$REGION" --project="$PROJECT"

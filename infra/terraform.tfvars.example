@@ -1,0 +1,9 @@
+project_id = "your-near-school-project"
+github_repository = "your-account/near-school"
+github_owner_id = "12345678"
+alert_email = "you@example.com"
+app_image = "asia-southeast1-docker.pkg.dev/your-project/near-school/app@sha256:replace"
+jobs_image = "asia-southeast1-docker.pkg.dev/your-project/near-school/jobs@sha256:replace"
+# Keep demo until the official-data publication gate has passed.
+data_mode = "demo"
+ai_mode = "demo"
