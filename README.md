@@ -20,6 +20,8 @@ Try **Show the two-track schools**, select Nanyang, then **Find parks nearby**. 
 
 ## Architecture
 
+Read the [architecture decisions and tradeoffs](docs/architecture.md) for the boundaries between spatial search, RAG and official eligibility.
+
 ```mermaid
 flowchart LR
   Browser[Next.js + MapLibre] --> Run[Cloud Run API]

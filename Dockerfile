@@ -10,6 +10,7 @@ RUN npm run build
 FROM base AS jobs
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
+RUN mkdir -p artifacts data/candidates && chown -R node:node artifacts data/candidates
 USER node
 CMD ["node", "--import", "tsx", "scripts/migrate.ts"]
 FROM base AS runner
