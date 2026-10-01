@@ -1,8 +1,12 @@
 # Near School
 
+[Open the hosted map](https://near-school-3ayf7ndbia-as.a.run.app/) · [Deployment checks](https://github.com/hoyeehong/near-school/actions/workflows/deploy.yml)
+
 A conversational map for Singapore P1 registration: schools, residential neighbourhoods, family amenities and the 2027 Phase 2C two-track scheme.
 
-**Current release: working portfolio demo.** Includes 14 illustrative school locations (the 12 two-track schools plus two comparison schools), sample HDB blocks and amenities. These coordinates are not official registration geometry. No official distance categories are bundled or inferred. Live Vertex AI, authorised data import and GCP infrastructure are implemented but require configuration.
+**Current release: working portfolio demo.** Includes 14 illustrative school locations (the 12 two-track schools plus two comparison schools), sample HDB blocks and amenities. These coordinates are not official registration geometry. No official distance categories are bundled or inferred. The hosted version runs a live Vertex AI assistant with database-backed policy retrieval on GCP. Local startup defaults to the guided demo. Authorised data import remains a separate release gate.
+
+![Near School interactive map](docs/near-school.png)
 
 ## Run locally
 
@@ -43,6 +47,8 @@ flowchart LR
 - No home addresses or conversation text are intentionally logged by the application. Infrastructure access logs require appropriate retention policies.
 
 ## Verification
+
+See the [recorded cloud evaluation and test evidence](docs/validation.md).
 
 ```sh
 npm run typecheck
