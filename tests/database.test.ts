@@ -1,6 +1,7 @@
 import { describe, it, expect, afterAll } from "vitest";
 import { database } from "../lib/db";
 import { reserveAiRequest } from "../lib/limits";
+import { readFile } from "node:fs/promises";
 describe.skipIf(!process.env.TEST_DATABASE_URL)(
   "PostgreSQL integration",
   () => {
@@ -28,6 +29,31 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
         "SELECT reserved_sgd FROM ai_budget",
       );
       expect(Number(rows[0].reserved_sgd)).toBe(0.1);
+    });
+    it("removes runtime role administration while preserving application grants", async () => {
+      await database().query(
+        "CREATE ROLE nearschool_runtime CREATEDB CREATEROLE",
+      );
+      try {
+        for (const file of [
+          "002_runtime_role.sql",
+          "003_runtime_attributes.sql",
+        ])
+          await database().query(await readFile(`migrations/${file}`, "utf8"));
+        const { rows } = await database().query(
+          "SELECT rolcreatedb,rolcreaterole,has_table_privilege('nearschool_runtime','places','SELECT') AS can_read,has_table_privilege('nearschool_runtime','places','UPDATE') AS can_publish,has_table_privilege('nearschool_runtime','ai_budget','UPDATE') AS can_budget FROM pg_roles WHERE rolname='nearschool_runtime'",
+        );
+        expect(rows[0]).toEqual({
+          rolcreatedb: false,
+          rolcreaterole: false,
+          can_read: true,
+          can_publish: false,
+          can_budget: true,
+        });
+      } finally {
+        await database().query("DROP OWNED BY nearschool_runtime");
+        await database().query("DROP ROLE nearschool_runtime");
+      }
     });
   },
 );

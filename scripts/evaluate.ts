@@ -52,17 +52,18 @@ for (const c of cases) {
   });
 }
 await mkdir("artifacts", { recursive: true });
-await writeFile(
-  "artifacts/evaluation.json",
-  JSON.stringify(
-    {
-      mode: process.env.EVAL_LIVE === "true" ? "live" : "deterministic-demo",
-      results,
-    },
-    null,
-    2,
-  ),
-);
-console.log(results);
+const report = {
+  mode: process.env.EVAL_LIVE === "true" ? "live" : "deterministic-demo",
+  model: process.env.EVAL_LIVE === "true" ? process.env.VERTEX_MODEL : null,
+  embeddingModel:
+    process.env.EVAL_LIVE === "true"
+      ? process.env.VERTEX_EMBEDDING_MODEL
+      : null,
+  evaluatedAt: new Date().toISOString(),
+  dataset: "illustrative-fixtures",
+  results,
+};
+await writeFile("artifacts/evaluation.json", JSON.stringify(report, null, 2));
+console.log(JSON.stringify({ event: "assistant_evaluation", ...report }));
 await database().end();
 if (results.some((r) => !r.passed)) process.exitCode = 1;
