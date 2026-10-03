@@ -1507,3 +1507,253 @@ p {
   cursor: pointer;
   font-size: 12px;
 }
+/* Focused housing exploration */
+.sidebar .sidebar-intro {
+  padding-bottom: 12px;
+}
+.sidebar .sidebar-intro h1 {
+  font-size: 24px;
+  line-height: 1.25;
+}
+.sidebar .sidebar-intro > p {
+  display: none;
+}
+.tabs {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tabs button {
+  padding: 12px 9px;
+  font-size: 12px;
+}
+.homes-panel,
+.compare-prompt {
+  padding: 18px 22px;
+  overflow: auto;
+}
+.panel-description,
+.comparison-view > p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #607067;
+}
+.home-filters {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+}
+.home-filters label,
+.comparison-view > label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  color: #3a5147;
+}
+.home-filters input,
+.home-filters select,
+.comparison-view select {
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #d4ded5;
+  border-radius: 7px;
+  background: #fff;
+  color: #213f37;
+  font: inherit;
+}
+.filter-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.home-filters details label {
+  margin-top: 10px;
+}
+.primary-action {
+  background: #25645b;
+  color: white;
+  border: 0;
+  border-radius: 7px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.primary-action:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.home-result {
+  border: 1px solid #dbe4d9;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+  background: #fffefa;
+}
+.home-select {
+  display: grid;
+  gap: 7px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  color: #24463a;
+  width: 100%;
+  cursor: pointer;
+}
+.home-select span {
+  font-size: 13px;
+}
+.home-select small,
+.homes-panel > small {
+  color: #627367;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.save-home {
+  margin-top: 12px;
+  padding: 7px 10px;
+  border: 1px solid #ceddce;
+  background: #eff4ed;
+  color: #315745;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.home-facts dl {
+  margin: 12px 0;
+}
+.home-facts dl div {
+  margin-bottom: 12px;
+}
+.home-facts dt {
+  font-size: 11px;
+  color: #627367;
+}
+.home-facts dd {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #23483d;
+}
+.evidence-note {
+  background: #fcf5e7;
+  padding: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  border-radius: 6px;
+}
+.transaction-scroll {
+  overflow-x: auto;
+}
+.transaction-scroll table {
+  font-size: 11px;
+  border-collapse: collapse;
+  width: 100%;
+}
+.transaction-scroll td,
+.transaction-scroll th {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+.detail-card details {
+  margin: 14px 0;
+  font-size: 12px;
+}
+summary {
+  cursor: pointer;
+}
+.comparison-view {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  padding: 30px;
+  background: #f7f8f2;
+  overflow: auto;
+}
+.comparison-view h2 {
+  margin: 0 0 10px;
+}
+.comparison-view > label {
+  max-width: 400px;
+  margin: 18px 0;
+}
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.comparison-grid article {
+  background: white;
+  border: 1px solid #dce5d9;
+  border-radius: 12px;
+  padding: 20px;
+}
+.comparison-grid h3 {
+  margin: 0;
+}
+.comparison-grid button,
+.comparison-grid a {
+  display: block;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.comparison-grid button {
+  border: 1px solid #ccdacc;
+  background: #f3f6ef;
+  padding: 9px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.comparison-grid button:disabled {
+  opacity: 0.5;
+}
+.amenity-options {
+  margin: 15px 0;
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .comparison-view {
+    padding: 18px;
+  }
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+  .homes-panel {
+    max-height: none;
+  }
+  .sidebar .sidebar-intro h1 {
+    font-size: 22px;
+  }
+}
+.journey-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0;
+}
+.journey-controls label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.journey-controls input {
+  padding: 9px;
+  border: 1px solid #ccdacc;
+  border-radius: 6px;
+}
+
+.homes-panel {
+  min-height: 0;
+  flex: 1;
+}
+.sidebar .tabs {
+  flex-wrap: nowrap;
+}
+.sidebar .tabs button {
+  padding-inline: 7px;
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .map-panel.show-comparison {
+    height: 75vh;
+    min-height: 500px;
+  }
+}

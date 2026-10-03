@@ -1,3 +1,5 @@
+import { housingFilterSchema } from "./housing/types";
+import { findHomes } from "./housing/repository";
 import { z } from "zod";
 import { findPlaces, getDistance, searchPolicies } from "./repository";
 import { registrationTrack } from "./rules";
@@ -30,6 +32,9 @@ const findSchema = z.object({
     ),
 });
 export const toolSchemas = {
+  findHomes: housingFilterSchema.describe(
+    "Search recorded home transactions with budget, property type, size, months, saleType, or a known school nearId. ids can contain up to three saved home IDs. All statistics describe matching recorded sales, never current listings or valuations.",
+  ),
   findSchools: findSchema,
   findHdbBlocks: findSchema.omit({ twoTrackOnly: true }),
   findAmenities: findSchema.omit({ twoTrackOnly: true }).extend({
@@ -50,6 +55,11 @@ export async function runTool(
   places: Place[],
 ) {
   if (!(name in toolSchemas)) throw new Error("Unsupported tool");
+  if (name === "findHomes")
+    return (await findHomes(housingFilterSchema.parse(args))).homes.slice(
+      0,
+      20,
+    );
   if (name === "getOfficialDistanceCategory") {
     const input = toolSchemas.getOfficialDistanceCategory.parse(args);
     const school = places.find(

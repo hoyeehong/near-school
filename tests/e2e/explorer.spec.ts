@@ -17,19 +17,19 @@ test("school search, selection and official-distance fail closed", async ({
   await expect(page.getByRole("status")).toContainText(
     "Select a residential address",
   );
-  await expect(page.getByText(/Portfolio demo/)).toBeVisible();
+  await expect(page.getByText(/School catalogue:/)).toBeVisible();
 });
 test("chat changes map results and undo restores previous state", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("tab", { name: /Ask the map/ }).click();
+  await page.getByRole("tab", { name: /Ask/ }).click();
   await page
     .getByRole("button", { name: "Show the two-track schools", exact: true })
     .click();
   await expect(page.getByText(/Showing 12 two-track schools/)).toBeVisible();
   await page.getByRole("button", { name: "Undo map change" }).click();
-  await page.getByRole("tab", { name: "Explore", exact: true }).click();
+  await page.getByRole("tab", { name: "Schools", exact: true }).click();
   await expect(page.getByText("14 schools", { exact: true })).toBeVisible();
 });
 test("year-specific tracks and empty-state handling", async ({ page }) => {
@@ -59,7 +59,7 @@ test("changing context prevents a delayed answer from moving the map", async ({
     });
   });
   await page.goto("/");
-  await page.getByRole("tab", { name: /Ask the map/ }).click();
+  await page.getByRole("tab", { name: /Ask/ }).click();
   await page
     .getByRole("button", { name: "Show the two-track schools", exact: true })
     .click();
@@ -67,7 +67,7 @@ test("changing context prevents a delayed answer from moving the map", async ({
     .getByLabel("Registration exercise", { exact: true })
     .selectOption("2026");
   await expect(page.getByText("Stale answer")).not.toBeVisible();
-  await page.getByRole("tab", { name: "Explore", exact: true }).click();
+  await page.getByRole("tab", { name: "Schools", exact: true }).click();
   await expect(page.getByText("14 schools", { exact: true })).toBeVisible();
 });
 

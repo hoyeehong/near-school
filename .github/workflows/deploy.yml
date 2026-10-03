@@ -51,6 +51,10 @@ jobs:
         run: |
           gcloud run jobs update near-school-migrate --image="$JOB_IMAGE" --region="$REGION" --project="$PROJECT"
           gcloud run jobs execute near-school-migrate --wait --region="$REGION" --project="$PROJECT"
+      - name: Refresh verified housing data
+        run: |
+          gcloud run jobs update near-school-housing --image="$JOB_IMAGE" --region="$REGION" --project="$PROJECT"
+          gcloud run jobs execute near-school-housing --wait --region="$REGION" --project="$PROJECT"
       - name: Deploy, smoke test and switch traffic
         run: bash scripts/release.sh
       - name: Update data job images

@@ -4,7 +4,7 @@
 
 A conversational map for Singapore P1 registration: schools, residential neighbourhoods, family amenities and the 2027 Phase 2C two-track scheme.
 
-**Current release: working portfolio demo.** Includes 14 illustrative school locations (the 12 two-track schools plus two comparison schools), sample HDB blocks and amenities. These coordinates are not official registration geometry. No official distance categories are bundled or inferred. The hosted version runs a live Vertex AI assistant with database-backed policy retrieval on GCP. Local startup defaults to the guided demo. Authorised data import remains a separate release gate.
+**Current release: working portfolio demo.** Includes 14 illustrative school locations (the 12 two-track schools plus two comparison schools), sample HDB blocks and amenities. These coordinates are not official registration geometry. No official distance categories are bundled or inferred. The hosted version runs a live Vertex AI assistant with database-backed policy retrieval on GCP. Local startup defaults to the guided demo. Official school-distance data remains a separate release gate. The Homes view uses real URA private residential and HDB resale transactions, with source dates, filtered statistics and browser-local comparisons. OneMap provides address lookup and walking/public-transport estimates while its token is valid. HDB map coverage is progressive and explicitly incomplete.
 
 ![Near School interactive map](docs/near-school.png)
 
@@ -21,6 +21,12 @@ npm run dev
 Open http://localhost:3000. No API keys or database are required for demo mode. OneMap basemap tiles need an internet connection; the accessible results list remains usable without them.
 
 Try **Show the two-track schools**, select Nanyang, then **Find parks nearby**. The local assistant is deliberately labelled as a deterministic guided demo, not a live language model.
+
+## Homes and comparisons
+
+Use **Homes** to filter recorded sales by school proximity, housing type, sale type, period, budget and size. Save up to three locations in **Compare** to inspect median prices, the middle 50% range, sales counts, floor area, tenure and journey estimates. These are historical transactions, not listings or valuations. Ask the hosted assistant about recorded housing transactions to run a structured database search and update the map.
+
+For a local housing import, start PostgreSQL, run migrations, and supply `DATABASE_URL`, `URA_ACCESS_KEY` and optionally `ONEMAP_TOKEN` to `npm run data:housing` through private environment variables. The hosted daily job loads credentials from Secret Manager. See [data coverage](docs/data.md) and [credential rotation](docs/operations.md).
 
 ## Architecture
 

@@ -1,7 +1,13 @@
 "use client";
+import { HomesPanel, HomeFacts, HomeTransactions, CompareHomes } from "./Homes";
+import {
+  savedHomeSchema,
+  type HousingFilters,
+  type Home,
+} from "@/lib/housing/types";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -70,7 +76,74 @@ export default function Explorer({
   });
   const [previous, setPrevious] = useState<View | null>(null);
   const [year, setYear] = useState<2026 | 2027>(2027),
-    [tab, setTab] = useState<"explore" | "ask">("explore");
+    [tab, setTab] = useState<"explore" | "homes" | "compare" | "ask">(
+      "explore",
+    );
+  const [homesSchool, setHomesSchool] = useState("");
+  const [homeResults, setHomeResults] = useState<Home[]>([]);
+  const [shortlist, setShortlist] = useState<Home[]>([]);
+  const [shortlistNotice, setShortlistNotice] = useState("");
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem("near-school-shortlist-v1") || "[]",
+      );
+      // Restore browser-local user state after hydration.
+      if (Array.isArray(stored))
+        setShortlist(
+          stored
+            .flatMap((value) => {
+              const parsed = savedHomeSchema.safeParse(value);
+              return parsed.success ? [parsed.data] : [];
+            })
+            .slice(0, 3),
+        );
+    } catch {
+      /* Storage may be unavailable. The session still works. */
+    }
+  }, []);
+  function saveHome(home: Home) {
+    setShortlistNotice("");
+    let next: Home[];
+    if (shortlist.some((h) => h.id === home.id))
+      next = shortlist.filter((h) => h.id !== home.id);
+    else if (shortlist.length === 3) {
+      setShortlistNotice(
+        "Your shortlist has three homes. Remove one in Compare to add another.",
+      );
+      return;
+    } else next = [...shortlist, home];
+    setShortlist(next);
+    try {
+      localStorage.setItem("near-school-shortlist-v1", JSON.stringify(next));
+    } catch {
+      setShortlistNotice(
+        "Saved for this session; browser storage is unavailable.",
+      );
+    }
+  }
+  const receiveHomes = useCallback((homes: Home[], filters: HousingFilters) => {
+    setHomeResults(homes);
+    setPlaces((p) => [
+      ...p.filter((x) => !homes.some((h) => h.id === x.id)),
+      ...homes,
+    ]);
+    setView((v) => ({
+      ...v,
+      categories: ["home"],
+      selectedId: filters.nearId || null,
+      resultIds: homes.map((h) => h.id),
+      query: "",
+      twoTrack: false,
+    }));
+    setRingMetres(filters.radiusMetres);
+    setDetailCollapsed(true);
+    setFocusIds([
+      ...homes.map((h) => h.id),
+      ...(filters.nearId ? [filters.nearId] : []),
+    ]);
+    setFocusKey((k) => k + 1);
+  }, []);
   const [detailCollapsed, setDetailCollapsed] = useState(false);
   const [ringMetres, setRingMetres] = useState(2000);
   const [focusIds, setFocusIds] = useState<string[]>([]),
@@ -86,6 +159,10 @@ export default function Explorer({
   const requestVersion = useRef(0),
     activeController = useRef<AbortController | null>(null);
   const selected = places.find((p) => p.id === view.selectedId);
+  const selectedHome =
+    homeResults.find((h) => h.id === view.selectedId) ??
+    shortlist.find((h) => h.id === view.selectedId);
+  const schools = places.filter((p) => p.category === "school");
   const updateView = (next: Partial<View>) => {
     requestVersion.current++;
     activeController.current?.abort();
@@ -109,6 +186,7 @@ export default function Explorer({
   );
   const schoolCount = places.filter((p) => p.category === "school").length;
   function select(id: string) {
+    setDetailCollapsed(false);
     updateView({ selectedId: id });
     setFocusIds([id]);
     setFocusKey((k) => k + 1);
@@ -196,6 +274,7 @@ export default function Explorer({
       year,
       selectedId: view.selectedId,
       addressId,
+      shortlistIds: shortlist.map((h) => h.id),
       visibleIds: visible.map((p) => p.id),
       categories: view.categories,
     };
@@ -214,6 +293,17 @@ export default function Explorer({
         );
       if (version !== requestVersion.current) return;
       const result = body as ChatResponse;
+      if (result.places?.length)
+        setHomeResults(
+          result.places.filter(
+            (p) => p.category === "home" && "housing" in p,
+          ) as Home[],
+        );
+      if (result.places?.length)
+        setPlaces((p) => [
+          ...p.filter((x) => !result.places!.some((h) => h.id === x.id)),
+          ...result.places!,
+        ]);
       setPrevious(view);
       setView((v) => {
         const next = { ...v, query: "", twoTrack: false };
@@ -311,9 +401,37 @@ export default function Explorer({
               role="tab"
               aria-selected={tab === "explore"}
               className={tab === "explore" ? "active" : ""}
-              onClick={() => setTab("explore")}
+              onClick={() => {
+                setTab("explore");
+                updateView({
+                  categories: ["school"],
+                  resultIds: null,
+                  query: "",
+                  twoTrack: false,
+                });
+              }}
             >
-              <MapPin size={15} /> Explore
+              <MapPin size={15} /> Schools
+            </button>
+            <button
+              role="tab"
+              aria-selected={tab === "homes"}
+              className={tab === "homes" ? "active" : ""}
+              onClick={() => {
+                setTab("homes");
+                setHomesSchool("");
+                updateView({ selectedId: null });
+              }}
+            >
+              Homes
+            </button>
+            <button
+              role="tab"
+              aria-selected={tab === "compare"}
+              className={tab === "compare" ? "active" : ""}
+              onClick={() => setTab("compare")}
+            >
+              Compare ({shortlist.length})
             </button>
             <button
               role="tab"
@@ -321,11 +439,36 @@ export default function Explorer({
               className={tab === "ask" ? "active" : ""}
               onClick={() => setTab("ask")}
             >
-              <Sparkles size={15} /> Ask the map{" "}
-              <span className="new-badge">AI</span>
+              <Sparkles size={15} /> Ask <span className="new-badge">AI</span>
             </button>
           </div>
-          {tab === "explore" ? (
+          {shortlistNotice && (
+            <p className="inline-error" role="status">
+              {shortlistNotice}
+            </p>
+          )}
+          {tab === "homes" ? (
+            <HomesPanel
+              key={homesSchool}
+              schools={schools}
+              nearId={homesSchool}
+              onResults={receiveHomes}
+              onSelect={(h) => select(h.id)}
+              onSave={saveHome}
+              savedIds={shortlist.map((h) => h.id)}
+            />
+          ) : tab === "compare" ? (
+            <div className="compare-prompt">
+              <h2>Make room for what matters.</h2>
+              <p>
+                Compare the evidence, home sizes and journeys before deciding
+                where to live.
+              </p>
+              <button onClick={() => setTab("homes")}>
+                Explore more homes
+              </button>
+            </div>
+          ) : tab === "explore" ? (
             <div className="explore-panel">
               <form
                 className="search-box"
@@ -394,23 +537,23 @@ export default function Explorer({
                   )}
                 </span>
               </button>
-              <div className="section-label">
-                THE NEIGHBOURHOOD <span>Map layers</span>
-              </div>
-              <div className="layer-grid">
-                {layers.map(({ id, label, icon: Icon }) => (
-                  <button
-                    aria-pressed={view.categories.includes(id)}
-                    key={id}
-                    className={view.categories.includes(id) ? "enabled" : ""}
-                    onClick={() => toggleLayer(id)}
-                  >
-                    <Icon size={14} />
-                    {label}
-                    {view.categories.includes(id) && <Check size={12} />}
-                  </button>
-                ))}
-              </div>
+              <details className="amenity-options">
+                <summary>Neighbourhood map layers</summary>
+                <div className="layer-grid">
+                  {layers.map(({ id, label, icon: Icon }) => (
+                    <button
+                      aria-pressed={view.categories.includes(id)}
+                      key={id}
+                      className={view.categories.includes(id) ? "enabled" : ""}
+                      onClick={() => toggleLayer(id)}
+                    >
+                      <Icon size={14} />
+                      {label}
+                      {view.categories.includes(id) && <Check size={12} />}
+                    </button>
+                  ))}
+                </div>
+              </details>
               <div className="results-heading">
                 <span>
                   {visible.length}{" "}
@@ -590,7 +733,9 @@ export default function Explorer({
             </button>
           </div>
         </aside>
-        <main className="map-panel">
+        <main
+          className={`map-panel ${tab === "compare" ? "show-comparison" : ""}`}
+        >
           <Map
             places={visible}
             selectedId={view.selectedId}
@@ -600,6 +745,14 @@ export default function Explorer({
             focusIds={focusIds}
             focusKey={focusKey}
           />
+          {tab === "compare" && (
+            <CompareHomes
+              homes={shortlist}
+              schools={schools}
+              onRemove={saveHome}
+              onExplore={() => setTab("homes")}
+            />
+          )}
           <div className="map-topline">
             <span className="map-location">
               <span className="live-dot" /> SINGAPORE <span>/</span> PRIMARY
@@ -613,7 +766,7 @@ export default function Explorer({
             <span>{year}</span>
             <small>REGISTRATION EXERCISE</small>
           </div>
-          {!selected && (
+          {!selected && tab === "explore" && (
             <div className="map-story">
               <span className="story-tag">
                 <Leaf size={13} /> MORE WAYS TO BELONG
@@ -645,7 +798,7 @@ export default function Explorer({
               </button>
             </div>
           )}
-          {selected && (
+          {selected && tab !== "compare" && (
             <section
               className={`detail-card${detailCollapsed ? " detail-collapsed" : ""}`}
               aria-label="Selected place"
@@ -671,6 +824,23 @@ export default function Explorer({
                 {detailCollapsed ? "Show details" : "Show more map"}
               </button>
               <div className="detail-content" hidden={detailCollapsed}>
+                {selectedHome && (
+                  <>
+                    <HomeFacts home={selectedHome} />
+                    <button
+                      className="primary-action"
+                      onClick={() => saveHome(selectedHome)}
+                    >
+                      {shortlist.some((h) => h.id === selectedHome.id)
+                        ? "Remove from shortlist"
+                        : "Save to compare"}
+                    </button>
+                    <HomeTransactions
+                      key={selectedHome.id}
+                      id={selectedHome.id}
+                    />
+                  </>
+                )}
                 <p className="detail-address">
                   <MapPin size={13} />
                   {selected.address}
@@ -704,6 +874,15 @@ export default function Explorer({
                 )}
                 {selected.category === "school" && (
                   <>
+                    <button
+                      className="primary-action"
+                      onClick={() => {
+                        setHomesSchool(selected.id);
+                        setTab("homes");
+                      }}
+                    >
+                      Find nearby homes
+                    </button>
                     <div className="track-explainer">
                       <span className="track-badge">
                         {selected.twoTrackFrom && year >= selected.twoTrackFrom
@@ -787,7 +966,7 @@ export default function Explorer({
               </span>
               <span>
                 <i className="legend-hdb" />
-                HDB block
+                {view.categories.includes("home") ? "Home sales" : "HDB block"}
               </span>
               <span>
                 <i className="legend-amenity" />
@@ -801,7 +980,7 @@ export default function Explorer({
                   ? "Source-backed catalogue · official distances checked separately"
                   : dataMode === "degraded"
                     ? "Live service unavailable · showing illustrative fallback"
-                    : `Portfolio demo · ${schoolCount} sample schools · illustrative locations`}
+                    : `School catalogue: ${schoolCount} sample locations · Homes: source-backed transactions`}
               </span>
               <button onClick={() => setHelp(true)}>
                 Details <ArrowUpRight size={12} />
