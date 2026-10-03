@@ -80,3 +80,48 @@ test("map renders accessible location markers", async ({ page }) => {
     }),
   ).toBeAttached();
 });
+
+test("selected location has an adjustable exploration perimeter", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("textbox", { name: "Search schools or addresses" })
+    .fill("Nanyang");
+  await page.getByRole("button", { name: /^Nanyang Primary School/ }).click();
+  const worker = await page.request.get("/maplibre/maplibre-gl-worker.mjs");
+  expect(worker.ok()).toBeTruthy();
+  expect(await worker.text()).toContain("maplibre-gl-shared.mjs");
+  const perimeter = page.getByRole("group", { name: "Exploration perimeter" });
+  await expect(
+    perimeter.getByRole("button", { name: "2 km", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await perimeter.getByRole("button", { name: "1 km", exact: true }).click();
+  await expect(perimeter).toContainText("Dashed ring: 1 km");
+  await expect(perimeter).toContainText(
+    "not an official registration boundary",
+  );
+  await perimeter.getByRole("button", { name: "Off", exact: true }).click();
+  await expect(perimeter).toContainText("Ring hidden");
+  await page
+    .getByRole("button", { name: "Explore nearby", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Map marker: Singapore Botanic Gardens",
+      exact: true,
+    }),
+  ).toBeAttached();
+  await expect(
+    page.getByRole("button", {
+      name: "Map marker: Nanyang Primary School",
+      exact: true,
+    }),
+  ).toBeAttached();
+  await page.getByRole("button", { name: "Show more map" }).click();
+  await expect(perimeter).not.toBeVisible();
+  await page.getByRole("button", { name: "Show details", exact: true }).click();
+  await expect(perimeter).toBeVisible();
+  await page.getByRole("button", { name: "Close selected place" }).click();
+  await expect(perimeter).not.toBeVisible();
+});

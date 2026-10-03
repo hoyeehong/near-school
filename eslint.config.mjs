@@ -6,6 +6,7 @@ export default defineConfig([
   ...nextTs,
   globalIgnores([
     ".next/**",
+    "public/maplibre/**",
     "next-env.d.ts",
     "artifacts/**",
     "playwright-report/**",

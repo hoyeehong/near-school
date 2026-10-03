@@ -15,3 +15,5 @@ infra/.terraform/
 data/candidates/
 artifacts/
 gha-creds-*.json
+
+public/maplibre/

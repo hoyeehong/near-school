@@ -88,3 +88,9 @@ Official distance integration is a release gate, not a future promise hidden beh
 - [HDB existing buildings](https://data.gov.sg/datasets/d_16b157c52ed637edd6ba1232e026258d/view)
 
 Policy snippets are short, manually reviewed summaries linked to MOE, not full reproductions. Source-data licences and attribution requirements remain separate from the code. This is an independent project, not affiliated with MOE, SLA or HDB.
+
+### Exploration perimeters
+
+Select a school or another map location to show an approximate 2 km perimeter. Use **1 km**, **2 km** or **Off** in the place card. The centre stays marked while exploring nearby amenities. These straight-line point-distance rings do not establish official registration eligibility or walking routes.
+
+See [the reference app review](docs/reference-map-app-review.md) for recommended follow-on features and source-code issues excluded from the port.
