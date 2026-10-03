@@ -103,6 +103,21 @@ test("selected location has an adjustable exploration perimeter", async ({
   );
   await perimeter.getByRole("button", { name: "Off", exact: true }).click();
   await expect(perimeter).toContainText("Ring hidden");
+  await page
+    .getByRole("button", { name: "Explore nearby", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Map marker: Singapore Botanic Gardens",
+      exact: true,
+    }),
+  ).toBeAttached();
+  await expect(
+    page.getByRole("button", {
+      name: "Map marker: Nanyang Primary School",
+      exact: true,
+    }),
+  ).toBeAttached();
   await page.getByRole("button", { name: "Show more map" }).click();
   await expect(perimeter).not.toBeVisible();
   await page.getByRole("button", { name: "Show details", exact: true }).click();

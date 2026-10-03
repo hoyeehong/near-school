@@ -130,9 +130,7 @@ export default function Map({
       transit: "#6689b2",
     };
     const markerPlaces =
-      ringOrigin?.coordinates &&
-      ringMetres &&
-      !places.some((p) => p.id === ringOrigin.id)
+      ringOrigin?.coordinates && !places.some((p) => p.id === ringOrigin.id)
         ? [...places, ringOrigin]
         : places;
     const markers = markerPlaces
@@ -158,7 +156,7 @@ export default function Map({
           .addTo(map.current!);
       });
     return () => markers.forEach((m) => m.remove());
-  }, [places, ready, selectedId, ringOrigin, ringMetres]);
+  }, [places, ready, selectedId, ringOrigin]);
   useEffect(() => {
     if (!ready || !map.current || !focusIds.length) return;
     const coords = places
