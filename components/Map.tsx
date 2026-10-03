@@ -33,6 +33,7 @@ export default function Map({
     if (!container.current) return;
     let instance: maplibregl.Map;
     try {
+      maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
       instance = new maplibregl.Map({
         container: container.current,
         center: [103.817, 1.323],
@@ -75,7 +76,7 @@ export default function Map({
       setFailed(true);
       return;
     }
-    instance.on("load", () => {
+    instance.on("style.load", () => {
       setReady(true);
     });
     instance.on("error", () => setFailed(true));

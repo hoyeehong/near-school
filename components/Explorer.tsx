@@ -71,6 +71,7 @@ export default function Explorer({
   const [previous, setPrevious] = useState<View | null>(null);
   const [year, setYear] = useState<2026 | 2027>(2027),
     [tab, setTab] = useState<"explore" | "ask">("explore");
+  const [detailCollapsed, setDetailCollapsed] = useState(false);
   const [ringMetres, setRingMetres] = useState(2000);
   const [focusIds, setFocusIds] = useState<string[]>([]),
     [focusKey, setFocusKey] = useState(0);
@@ -645,7 +646,10 @@ export default function Explorer({
             </div>
           )}
           {selected && (
-            <section className="detail-card" aria-label="Selected place">
+            <section
+              className={`detail-card${detailCollapsed ? " detail-collapsed" : ""}`}
+              aria-label="Selected place"
+            >
               <button
                 className="close-detail"
                 aria-label="Close selected place"
@@ -659,111 +663,120 @@ export default function Explorer({
                   : "EXPLORE THE NEIGHBOURHOOD"}
               </span>
               <h2>{selected.name}</h2>
-              <p className="detail-address">
-                <MapPin size={13} />
-                {selected.address}
-              </p>
-              {selected.coordinates && (
-                <fieldset className="ring-options">
-                  <legend>Exploration perimeter</legend>
-                  <div>
-                    {[0, 1000, 2000].map((metres) => (
-                      <button
-                        key={metres}
-                        aria-pressed={ringMetres === metres}
-                        onClick={() => {
-                          setRingMetres(metres);
-                          setFocusIds([selected.id]);
-                          setFocusKey((key) => key + 1);
-                        }}
-                      >
-                        {metres ? `${metres / 1000} km` : "Off"}
-                      </button>
-                    ))}
-                  </div>
-                  <p>
-                    {ringMetres
-                      ? `Dashed ring: ${ringMetres / 1000} km from this map point. `
-                      : "Ring hidden. "}
-                    Approximate straight-line distance, not an official
-                    registration boundary or walking route.
-                  </p>
-                </fieldset>
-              )}
-              {selected.category === "school" && (
-                <>
-                  <div className="track-explainer">
-                    <span className="track-badge">
-                      {selected.twoTrackFrom && year >= selected.twoTrackFrom
-                        ? "Two-track school"
-                        : "Standard distance priority"}
-                    </span>
+              <button
+                className="detail-toggle"
+                aria-expanded={!detailCollapsed}
+                onClick={() => setDetailCollapsed((value) => !value)}
+              >
+                {detailCollapsed ? "Show details" : "Show more map"}
+              </button>
+              <div className="detail-content" hidden={detailCollapsed}>
+                <p className="detail-address">
+                  <MapPin size={13} />
+                  {selected.address}
+                </p>
+                {selected.coordinates && (
+                  <fieldset className="ring-options">
+                    <legend>Exploration perimeter</legend>
+                    <div>
+                      {[0, 1000, 2000].map((metres) => (
+                        <button
+                          key={metres}
+                          aria-pressed={ringMetres === metres}
+                          onClick={() => {
+                            setRingMetres(metres);
+                            setFocusIds([selected.id]);
+                            setFocusKey((key) => key + 1);
+                          }}
+                        >
+                          {metres ? `${metres / 1000} km` : "Off"}
+                        </button>
+                      ))}
+                    </div>
                     <p>
-                      {selected.twoTrackFrom && year >= selected.twoTrackFrom
-                        ? "≤2 km and >2 km tracks. No extra distance priority within each track; citizenship priority still applies."
-                        : "Citizenship first, then the official 1 km and 2 km distance categories."}
+                      {ringMetres
+                        ? `Dashed ring: ${ringMetres / 1000} km from this map point. `
+                        : "Ring hidden. "}
+                      Approximate straight-line distance, not an official
+                      registration boundary or walking route.
                     </p>
-                  </div>
+                  </fieldset>
+                )}
+                {selected.category === "school" && (
+                  <>
+                    <div className="track-explainer">
+                      <span className="track-badge">
+                        {selected.twoTrackFrom && year >= selected.twoTrackFrom
+                          ? "Two-track school"
+                          : "Standard distance priority"}
+                      </span>
+                      <p>
+                        {selected.twoTrackFrom && year >= selected.twoTrackFrom
+                          ? "≤2 km and >2 km tracks. No extra distance priority within each track; citizenship priority still applies."
+                          : "Citizenship first, then the official 1 km and 2 km distance categories."}
+                      </p>
+                    </div>
+                    <button
+                      className="verify-button"
+                      onClick={() => void checkDistance(selected.id)}
+                    >
+                      <ShieldCheck size={14} /> Check official distance
+                    </button>
+                    <p className="unverified" role="status">
+                      {distance ??
+                        "Official distance unverified · no inferred boundaries"}
+                    </p>
+                  </>
+                )}
+                {["hdb", "address"].includes(selected.category) && (
                   <button
                     className="verify-button"
-                    onClick={() => void checkDistance(selected.id)}
+                    onClick={() => {
+                      requestVersion.current++;
+                      setAddressId(selected.id);
+                      setDistance(null);
+                    }}
                   >
-                    <ShieldCheck size={14} /> Check official distance
+                    {addressId === selected.id ? (
+                      <Check size={14} />
+                    ) : (
+                      <House size={14} />
+                    )}{" "}
+                    {addressId === selected.id
+                      ? "Address selected for lookup"
+                      : "Use this address"}
                   </button>
-                  <p className="unverified" role="status">
-                    {distance ??
-                      "Official distance unverified · no inferred boundaries"}
-                  </p>
-                </>
-              )}
-              {["hdb", "address"].includes(selected.category) && (
-                <button
-                  className="verify-button"
-                  onClick={() => {
-                    requestVersion.current++;
-                    setAddressId(selected.id);
-                    setDistance(null);
-                  }}
-                >
-                  {addressId === selected.id ? (
-                    <Check size={14} />
-                  ) : (
-                    <House size={14} />
-                  )}{" "}
-                  {addressId === selected.id
-                    ? "Address selected for lookup"
-                    : "Use this address"}
-                </button>
-              )}
-              <div className="detail-actions">
-                <button
-                  onClick={() => void ask(`Find parks near ${selected.name}`)}
-                >
-                  Explore nearby <ArrowRight size={14} />
-                </button>
-                <a href={selected.sourceUrl} target="_blank" rel="noreferrer">
-                  View source <ArrowUpRight size={13} />
-                </a>
-              </div>
-              <small className="source-note">
-                {selected.quality === "illustrative"
-                  ? "Illustrative location · verify before use"
-                  : `Source updated ${selected.updatedAt}`}
-              </small>
-              {selected.coordinates && (
-                <div className="nearby-summary">
-                  {
-                    places.filter(
-                      (p) =>
-                        p.category !== "school" &&
-                        p.coordinates &&
-                        metresBetween(selected.coordinates!, p.coordinates) <=
-                          1000,
-                    ).length
-                  }{" "}
-                  listed neighbourhood places within 1 km · point distance
+                )}
+                <div className="detail-actions">
+                  <button
+                    onClick={() => void ask(`Find parks near ${selected.name}`)}
+                  >
+                    Explore nearby <ArrowRight size={14} />
+                  </button>
+                  <a href={selected.sourceUrl} target="_blank" rel="noreferrer">
+                    View source <ArrowUpRight size={13} />
+                  </a>
                 </div>
-              )}
+                <small className="source-note">
+                  {selected.quality === "illustrative"
+                    ? "Illustrative location · verify before use"
+                    : `Source updated ${selected.updatedAt}`}
+                </small>
+                {selected.coordinates && (
+                  <div className="nearby-summary">
+                    {
+                      places.filter(
+                        (p) =>
+                          p.category !== "school" &&
+                          p.coordinates &&
+                          metresBetween(selected.coordinates!, p.coordinates) <=
+                            1000,
+                      ).length
+                    }{" "}
+                    listed neighbourhood places within 1 km · point distance
+                  </div>
+                )}
+              </div>
             </section>
           )}
           <div className="map-bottom">

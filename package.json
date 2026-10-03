@@ -19,7 +19,9 @@
     "data:refresh": "node --import tsx scripts/refresh.ts",
     "data:publish": "node --import tsx scripts/publish.ts",
     "eval": "node --import tsx scripts/evaluate.ts",
-    "smoke": "node --import tsx scripts/smoke.ts"
+    "smoke": "node --import tsx scripts/smoke.ts",
+    "predev": "node scripts/prepare-map-worker.mjs",
+    "prebuild": "node scripts/prepare-map-worker.mjs"
   },
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.12.0",

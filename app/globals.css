@@ -1497,3 +1497,13 @@ p {
   color: #536a65;
   margin: 10px 0 0;
 }
+.detail-toggle {
+  margin-top: 8px;
+  border: 0;
+  background: transparent;
+  color: #235e58;
+  text-decoration: underline;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 12px;
+}

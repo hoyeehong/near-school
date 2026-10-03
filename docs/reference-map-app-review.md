@@ -26,6 +26,6 @@ Reviewed 3 October 2026. This is a source review of the supplied `map-app` folde
 
 ## Delivered perimeter behaviour
 
-The dashed teal ring measures approximately 1 or 2 km from the selected map coordinate. It is available for schools and other geocoded places, defaults to 2 km, and is removable. Selecting a radius frames the ring. A selected centre remains visible when filtered out of the results, without adding it to the result count. Asking about amenities can still focus the returned locations. Closing the selection removes the ring.
+The dashed teal ring measures approximately 1 or 2 km from the selected map coordinate. It is available for schools and other geocoded places, defaults to 2 km, and is removable. Selecting a radius frames the ring. A selected centre remains visible when filtered out of the results, without adding it to the result count. Asking about amenities can still focus the returned locations. Closing the selection removes the ring. “Show more map” collapses the details without clearing the selection. MapLibre’s geometry worker and shared module are copied from the locked dependency into public assets during development/build and included in the deployed container.
 
 The ring is an exploration aid, not a walking route, school land-boundary buffer, official home-school distance classification or admission guarantee. The hosted location catalogue remains illustrative until verified data is published.
