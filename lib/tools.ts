@@ -55,11 +55,10 @@ export async function runTool(
   places: Place[],
 ) {
   if (!(name in toolSchemas)) throw new Error("Unsupported tool");
-  if (name === "findHomes")
-    return (await findHomes(housingFilterSchema.parse(args))).homes.slice(
-      0,
-      20,
-    );
+  if (name === "findHomes") {
+    const result = await findHomes(housingFilterSchema.parse(args));
+    return { ...result, homes: result.homes.slice(0, 20) };
+  }
   if (name === "getOfficialDistanceCategory") {
     const input = toolSchemas.getOfficialDistanceCategory.parse(args);
     const school = places.find(

@@ -1,3 +1,4 @@
+import type { HousingResponse } from "./housing/types";
 import {
   GoogleGenAI,
   type Content,
@@ -137,9 +138,12 @@ export async function liveChat(
           context,
           places,
         );
-        if (call.name?.startsWith("find")) resultPlaces = output as Place[];
         if (call.name === "findHomes")
-          for (const p of output as Place[])
+          resultPlaces = (output as HousingResponse).homes;
+        else if (call.name?.startsWith("find"))
+          resultPlaces = output as Place[];
+        if (call.name === "findHomes")
+          for (const p of (output as HousingResponse).homes)
             citations.set(p.sourceUrl, {
               title: "Recorded housing transactions",
               url: p.sourceUrl,
@@ -161,18 +165,7 @@ export async function liveChat(
         };
       }
       // Bound model context independently of the full feature set kept for map actions.
-      const compact =
-        call.name?.startsWith("find") && Array.isArray(output)
-          ? {
-              count: output.length,
-              places: (output as Place[]).slice(0, 40).map((p) => ({
-                id: p.id,
-                name: p.name,
-                category: p.category,
-                quality: p.quality,
-              })),
-            }
-          : output;
+      const compact = compactToolResult(call.name ?? "", output);
       parts.push({
         functionResponse: { name: call.name!, response: { result: compact } },
       });
@@ -180,4 +173,43 @@ export async function liveChat(
     contents.push({ role: "user", parts });
   }
   throw new Error("Please narrow the question and try again");
+}
+
+export function compactToolResult(name: string, output: unknown): unknown {
+  if (
+    name === "findHomes" &&
+    output &&
+    typeof output === "object" &&
+    "homes" in output
+  ) {
+    const result = output as HousingResponse;
+    return {
+      totalMatchingLocations: result.total,
+      returnedLocations: result.homes.length,
+      filters: result.filters,
+      refreshedAt: result.refreshedAt,
+      sources: result.sources,
+      places: result.homes.map((p) => ({
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        quality: p.quality,
+        housing: p.housing,
+      })),
+      note: "Location counts are not transaction counts. Each housing.count is the matching sales count for that location. Results may be truncated; only discuss statistics actually returned.",
+    };
+  }
+  return name.startsWith("find") && Array.isArray(output)
+    ? {
+        count: output.length,
+        places: (output as Place[])
+          .slice(0, 40)
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            category: p.category,
+            quality: p.quality,
+          })),
+      }
+    : output;
 }
