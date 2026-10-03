@@ -1,17 +1,22 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
+import { explorationRing } from "@/lib/exploration-ring";
 import type { Place } from "@/lib/types";
 import { LocateFixed, Minus, Plus } from "lucide-react";
 export default function Map({
   places,
   selectedId,
+  ringOrigin,
+  ringMetres,
   onSelect,
   focusIds,
   focusKey,
 }: {
   places: Place[];
   selectedId: string | null;
+  ringOrigin: Place | undefined;
+  ringMetres: number;
   onSelect: (id: string) => void;
   focusIds: string[];
   focusKey: number;
@@ -80,6 +85,39 @@ export default function Map({
     };
   }, []);
   useEffect(() => {
+    const instance = map.current;
+    if (!ready || !instance) return;
+    const data: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features:
+        ringOrigin?.coordinates && ringMetres
+          ? [explorationRing(ringOrigin.coordinates, ringMetres)]
+          : [],
+    };
+    const source = instance.getSource("exploration-ring") as
+      maplibregl.GeoJSONSource | undefined;
+    if (source) source.setData(data);
+    else {
+      instance.addSource("exploration-ring", { type: "geojson", data });
+      instance.addLayer({
+        id: "exploration-fill",
+        type: "fill",
+        source: "exploration-ring",
+        paint: { "fill-color": "#238c99", "fill-opacity": 0.08 },
+      });
+      instance.addLayer({
+        id: "exploration-outline",
+        type: "line",
+        source: "exploration-ring",
+        paint: {
+          "line-color": "#177e8a",
+          "line-width": 2.5,
+          "line-dasharray": [3, 2],
+        },
+      });
+    }
+  }, [ready, ringOrigin, ringMetres]);
+  useEffect(() => {
     if (!map.current) return;
     const colors = {
       school: "#25645b",
@@ -90,7 +128,13 @@ export default function Map({
       hawker: "#cc9c39",
       transit: "#6689b2",
     };
-    const markers = places
+    const markerPlaces =
+      ringOrigin?.coordinates &&
+      ringMetres &&
+      !places.some((p) => p.id === ringOrigin.id)
+        ? [...places, ringOrigin]
+        : places;
+    const markers = markerPlaces
       .filter((p) => p.coordinates)
       .map((p) => {
         const button = document.createElement("button");
@@ -113,12 +157,24 @@ export default function Map({
           .addTo(map.current!);
       });
     return () => markers.forEach((m) => m.remove());
-  }, [places, ready, selectedId]);
+  }, [places, ready, selectedId, ringOrigin, ringMetres]);
   useEffect(() => {
     if (!ready || !map.current || !focusIds.length) return;
     const coords = places
       .filter((p) => focusIds.includes(p.id) && p.coordinates)
       .map((p) => p.coordinates!);
+    if (
+      ringOrigin?.coordinates &&
+      ringMetres &&
+      focusIds.includes(ringOrigin.id)
+    ) {
+      coords.push(
+        ...explorationRing(
+          ringOrigin.coordinates,
+          ringMetres,
+        ).geometry.coordinates[0].map((p) => [p[0], p[1]] as [number, number]),
+      );
+    }
     if (!coords.length) return;
     const bounds = coords.reduce(
       (b, c) => b.extend(c),
@@ -131,7 +187,7 @@ export default function Map({
         ? 0
         : 650,
     });
-  }, [focusKey, focusIds, places, ready]);
+  }, [focusKey, focusIds, places, ready, ringOrigin, ringMetres]);
   return (
     <>
       <div

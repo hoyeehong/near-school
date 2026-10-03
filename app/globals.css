@@ -1462,3 +1462,38 @@ p {
 .track-filter {
   width: 100%;
 }
+
+.ring-options {
+  border: 1px solid #d4e3df;
+  border-radius: 10px;
+  margin: 16px 0;
+  padding: 12px;
+}
+.ring-options legend {
+  font-size: 12px;
+  font-weight: 650;
+  padding: 0 5px;
+}
+.ring-options > div {
+  display: flex;
+  gap: 6px;
+}
+.ring-options button {
+  flex: 1;
+  border: 1px solid #c7d8d4;
+  border-radius: 6px;
+  padding: 8px;
+  background: white;
+  color: #235e58;
+  cursor: pointer;
+}
+.ring-options button[aria-pressed="true"] {
+  background: #235e58;
+  color: white;
+}
+.ring-options p {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #536a65;
+  margin: 10px 0 0;
+}

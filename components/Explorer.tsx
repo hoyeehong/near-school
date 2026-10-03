@@ -71,6 +71,7 @@ export default function Explorer({
   const [previous, setPrevious] = useState<View | null>(null);
   const [year, setYear] = useState<2026 | 2027>(2027),
     [tab, setTab] = useState<"explore" | "ask">("explore");
+  const [ringMetres, setRingMetres] = useState(2000);
   const [focusIds, setFocusIds] = useState<string[]>([]),
     [focusKey, setFocusKey] = useState(0);
   const [question, setQuestion] = useState(""),
@@ -592,6 +593,8 @@ export default function Explorer({
           <Map
             places={visible}
             selectedId={view.selectedId}
+            ringOrigin={selected}
+            ringMetres={ringMetres}
             onSelect={select}
             focusIds={focusIds}
             focusKey={focusKey}
@@ -660,6 +663,33 @@ export default function Explorer({
                 <MapPin size={13} />
                 {selected.address}
               </p>
+              {selected.coordinates && (
+                <fieldset className="ring-options">
+                  <legend>Exploration perimeter</legend>
+                  <div>
+                    {[0, 1000, 2000].map((metres) => (
+                      <button
+                        key={metres}
+                        aria-pressed={ringMetres === metres}
+                        onClick={() => {
+                          setRingMetres(metres);
+                          setFocusIds([selected.id]);
+                          setFocusKey((key) => key + 1);
+                        }}
+                      >
+                        {metres ? `${metres / 1000} km` : "Off"}
+                      </button>
+                    ))}
+                  </div>
+                  <p>
+                    {ringMetres
+                      ? `Dashed ring: ${ringMetres / 1000} km from this map point. `
+                      : "Ring hidden. "}
+                    Approximate straight-line distance, not an official
+                    registration boundary or walking route.
+                  </p>
+                </fieldset>
+              )}
               {selected.category === "school" && (
                 <>
                   <div className="track-explainer">

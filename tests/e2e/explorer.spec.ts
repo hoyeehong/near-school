@@ -80,3 +80,26 @@ test("map renders accessible location markers", async ({ page }) => {
     }),
   ).toBeAttached();
 });
+
+test("selected location has an adjustable exploration perimeter", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("textbox", { name: "Search schools or addresses" })
+    .fill("Nanyang");
+  await page.getByRole("button", { name: /^Nanyang Primary School/ }).click();
+  const perimeter = page.getByRole("group", { name: "Exploration perimeter" });
+  await expect(
+    perimeter.getByRole("button", { name: "2 km", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await perimeter.getByRole("button", { name: "1 km", exact: true }).click();
+  await expect(perimeter).toContainText("Dashed ring: 1 km");
+  await expect(perimeter).toContainText(
+    "not an official registration boundary",
+  );
+  await perimeter.getByRole("button", { name: "Off", exact: true }).click();
+  await expect(perimeter).toContainText("Ring hidden");
+  await page.getByRole("button", { name: "Close selected place" }).click();
+  await expect(perimeter).not.toBeVisible();
+});
