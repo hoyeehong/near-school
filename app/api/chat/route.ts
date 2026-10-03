@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         { error: "Enter a question and valid map context." },
         { status: 400 },
       );
-    const places = await getPlaces();
+    const places = [...(await getPlaces())];
     if (
       input.data.context.selectedId?.match(/^(ura-|hdb-sale-)[a-f0-9]{24}$/)
     ) {
