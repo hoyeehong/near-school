@@ -1,6 +1,7 @@
 import { z } from "zod";
 export const categories = [
   "school",
+  "home",
   "hdb",
   "address",
   "childcare",
@@ -46,8 +47,9 @@ export const contextSchema = z.object({
   year: z.union([z.literal(2026), z.literal(2027)]).default(2027),
   selectedId: z.string().max(120).nullable().default(null),
   addressId: z.string().max(200).nullable().default(null),
+  shortlistIds: z.array(z.string().max(120)).max(3).optional(),
   visibleIds: z.array(z.string().max(120)).max(500).default([]),
-  categories: z.array(categorySchema).max(7).default(["school"]),
+  categories: z.array(categorySchema).max(8).default(["school"]),
 });
 export type MapContext = z.infer<typeof contextSchema>;
 export const actionSchema = z.discriminatedUnion("type", [
@@ -68,4 +70,5 @@ export type ChatResponse = {
   actions: MapAction[];
   mode: "demo" | "live";
   requestId?: string;
+  places?: Place[];
 };

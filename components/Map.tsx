@@ -122,6 +122,7 @@ export default function Map({
     if (!map.current) return;
     const colors = {
       school: "#25645b",
+      home: "#b87955",
       hdb: "#bf7955",
       address: "#626b78",
       childcare: "#ac7296",
@@ -143,6 +144,7 @@ export default function Map({
         button.setAttribute("title", p.name);
         button.textContent = {
           school: "S",
+          home: "H",
           hdb: "H",
           address: "•",
           childcare: "C",

@@ -94,7 +94,7 @@ resource "google_sql_user" "runtime" {
   password = random_password.runtime_db.result
 }
 resource "google_secret_manager_secret" "secrets" {
-  for_each  = toset(["database-url", "migration-database-url", "rate-limit-salt", "onemap-token"])
+  for_each  = toset(["database-url", "migration-database-url", "rate-limit-salt", "onemap-token", "ura-access-key"])
   secret_id = "near-school-${each.value}"
   replication {
     auto {}
@@ -145,7 +145,7 @@ resource "google_secret_manager_secret_iam_member" "runtime" {
   member    = "serviceAccount:${google_service_account.runtime.email}"
 }
 resource "google_secret_manager_secret_iam_member" "jobs" {
-  for_each  = toset(["migration-database-url", "onemap-token"])
+  for_each  = toset(["migration-database-url", "onemap-token", "ura-access-key"])
   secret_id = google_secret_manager_secret.secrets[each.value].id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.jobs.email}"
@@ -228,7 +228,7 @@ resource "google_cloud_run_v2_service" "app" {
       }
       dynamic "env" {
         for_each = {
-          DATABASE_URL = "database-url", RATE_LIMIT_SALT = "rate-limit-salt"
+          DATABASE_URL = "database-url", RATE_LIMIT_SALT = "rate-limit-salt", ONEMAP_TOKEN = "onemap-token"
         }
         content {
           name = env.key
@@ -269,7 +269,7 @@ resource "google_cloud_run_v2_service_iam_member" "public" {
   member   = "allUsers"
 }
 resource "google_cloud_run_v2_job" "jobs" {
-  for_each            = toset(["migrate", "seed", "refresh", "evaluate"])
+  for_each            = toset(["migrate", "seed", "refresh", "evaluate", "housing"])
   name                = "near-school-${each.value}"
   location            = var.region
   deletion_protection = false
@@ -307,6 +307,18 @@ resource "google_cloud_run_v2_job" "jobs" {
 
           }
 
+        }
+        dynamic "env" {
+          for_each = each.value == "housing" ? { URA_ACCESS_KEY = "ura-access-key", ONEMAP_TOKEN = "onemap-token" } : {}
+          content {
+            name = env.key
+            value_source {
+              secret_key_ref {
+                secret  = google_secret_manager_secret.secrets[env.value].secret_id
+                version = "latest"
+              }
+            }
+          }
         }
         dynamic "env" {
           for_each = {
@@ -384,5 +396,22 @@ resource "google_cloud_scheduler_job" "refresh" {
       service_account_email = google_service_account.scheduler.email
     }
 
+  }
+}
+
+resource "google_cloud_run_v2_job_iam_member" "housing_scheduler" {
+  name     = google_cloud_run_v2_job.jobs["housing"].name
+  location = var.region
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.scheduler.email}"
+}
+resource "google_cloud_scheduler_job" "housing" {
+  name      = "near-school-daily-housing"
+  schedule  = "30 7 * * *"
+  time_zone = "Asia/Singapore"
+  http_target {
+    uri         = "https://run.googleapis.com/v2/projects/${var.project_id}/locations/${var.region}/jobs/${google_cloud_run_v2_job.jobs["housing"].name}:run"
+    http_method = "POST"
+    oauth_token { service_account_email = google_service_account.scheduler.email }
   }
 }

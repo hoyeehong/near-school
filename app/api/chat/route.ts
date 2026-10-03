@@ -1,3 +1,4 @@
+import { getHomePlace } from "@/lib/housing/repository";
 import { z } from "zod";
 import { contextSchema } from "@/lib/types";
 import { getPlaces } from "@/lib/repository";
@@ -31,6 +32,12 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     const places = await getPlaces();
+    if (
+      input.data.context.selectedId?.match(/^(ura-|hdb-sale-)[a-f0-9]{24}$/)
+    ) {
+      const home = await getHomePlace(input.data.context.selectedId);
+      if (home) places.push(home);
+    }
     let result;
     if (process.env.AI_MODE === "live") {
       await reserveAiRequest(anonymousKey(request));

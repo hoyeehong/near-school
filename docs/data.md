@@ -37,3 +37,13 @@ The `≤2km` track includes official within-1km and 1–2km categories. The `>2k
 Policy summaries include effective years and source URLs. Ingestion creates embeddings using the configured model and stores its identifier; retrieval never compares embeddings from different models. A model change requires re-embedding the corpus.
 
 No school enrolment, applicant count, eligibility or ballot probability is inferred from public housing density.
+
+## Verified housing transactions
+
+The Homes view reads PostgreSQL transaction aggregates, independently of the school catalogue's `DATA_MODE`. It never substitutes illustrative prices. URA private residential transactions are fetched server-side using a daily token and all four `PMI_Resi_Transaction` batches. SVY21 project coordinates are converted to WGS84. HDB resale records come from data.gov.sg dataset `d_8b84c4ee58e3cfc0ece0d773c8ca6abc`; they are mapped only after an exact OneMap address match. Unmapped blocks remain searchable but cannot appear in radius searches.
+
+The import retains approximately five years, publishes each source atomically, and preserves the last successful source snapshot on failure. Project rows can recur across URA batches: project keys are deduplicated while repeated, indistinguishable transaction records retain occurrence IDs. There is no unit-level identity in the public source, so the application does not infer one. A daily job at 07:30 Singapore time refreshes data and attempts up to 500 new HDB addresses. Unresolved matches are cached for 30 days to avoid preventing progress through the remaining addresses.
+
+Median price, middle 50% price range, median area, sales count and PSF describe only transactions matching the displayed period, sale type, price, area and property-type filters. Bulk transactions are excluded from aggregates. PSF is suppressed when area bases are mixed or unknown. Small and mixed samples are identified. Latest transaction tables show all types and explicitly label bulk records. Saved comparisons preserve their filter description and source timestamp; they are browser-local snapshots, not current valuations or sale listings.
+
+School search points and exploration circles remain illustrative where labelled. Neither a housing coordinate nor a route establishes MOE home–school distance eligibility. Journeys resolve the school address through OneMap when its catalogue coordinate is illustrative, but do not claim to identify a verified school gate. No article text or proprietary Straits Times map data is republished.

@@ -8,6 +8,20 @@ const status = await health.json();
 const home = await fetch(base, { signal: AbortSignal.timeout(20000) });
 if (!home.ok || !(await home.text()).includes("near"))
   throw new Error("Page check failed");
+const housing = await fetch(`${base}/api/homes?kind=private`, {
+  signal: AbortSignal.timeout(20000),
+});
+if (!housing.ok) throw new Error("Housing API check failed");
+const housingData = await housing.json();
+if (
+  !housingData.refreshedAt ||
+  !housingData.homes?.length ||
+  !housingData.homes.every(
+    (h: { housing: { count: number; medianPrice: number } }) =>
+      h.housing.count > 0 && h.housing.medianPrice > 0,
+  )
+)
+  throw new Error("Housing data check failed");
 const chat = await fetch(`${base}/api/chat`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },

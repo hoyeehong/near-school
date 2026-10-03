@@ -57,3 +57,33 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
     });
   },
 );
+
+describe.skipIf(!process.env.TEST_DATABASE_URL)("Housing statistics", () => {
+  it("filters before aggregation and excludes bulk transactions", async () => {
+    const db = database();
+    await db.query(
+      "INSERT INTO housing_projects VALUES('housing-test','Test','Test road','private',NULL,'https://eservice.ura.gov.sg/maps/api/',now())",
+    );
+    try {
+      await db.query(`INSERT INTO housing_transactions VALUES
+    ('housing-t1','housing-test',CURRENT_DATE,1000000,100,'Condominium','Strata','Freehold','resale','01-05',1),
+    ('housing-t2','housing-test',CURRENT_DATE,2000000,100,'Condominium','Strata','Freehold','resale','01-05',1),
+    ('housing-t3','housing-test',CURRENT_DATE,9000000,900,'Condominium','Strata','Freehold','resale','01-05',9)`);
+      const { findHomes } = await import("../lib/housing/repository");
+      const all = await findHomes({ query: "Test road" });
+      const h = all.homes.find((h) => h.id === "housing-test")!;
+      expect(h.housing.count).toBe(2);
+      expect(h.housing.medianPrice).toBe(1500000);
+      const filtered = await findHomes({
+        query: "Test road",
+        maxPrice: 1100000,
+      });
+      expect(
+        filtered.homes.find((h) => h.id === "housing-test")!.housing.count,
+      ).toBe(1);
+    } finally {
+      await db.query("DELETE FROM housing_projects WHERE id='housing-test'");
+      await db.end();
+    }
+  });
+});
